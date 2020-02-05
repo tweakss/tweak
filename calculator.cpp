@@ -29,7 +29,7 @@ int main()
 	
 
 	printf("%d is size of char array\n", sizeof(str));
-	scanf_s("%s", str, (rsize_t)sizeof str);
+	scanf("%s", str);
 	printf("Address of str: %p\n", str);
 	printf("%s is the entire string\n", str);
 
@@ -65,13 +65,13 @@ int main()
 	}
 	printf("\n");
 
-	/*evaluate_S(str, str1);
-	printf("\nAfter evaluate_M str1: ");
+	evaluate_S(str, str1);
+	printf("\nAfter evaluate_S str1: ");
 	for (int i = 0; str1[i] != '\0'; i++)
 	{
 		printf("%c", str1[i]);
 	}
-	printf("\n");*/
+	printf("\n");
 
 	return 0;
 }
@@ -583,7 +583,8 @@ int get_LeftNum(char* input, int* optrIndex, char* storeDigits, int* endOfLeft)
 		}
 
 		if (!(isdigit((input[goLeft - 1]))))
-			*endOfLeft = goLeft - 1; //endOfLeft is the index of the non digit that it hits
+			*endOfLeft = goLeft; //endOfLeft is the index of the digit right before the non digit as you go left
+			//*endOfLeft = goLeft - 1; //endOfLeft is the index of the non digit that it hits
 		//printf("END get_LeftNum FOR LOOP\n");
 
 	}
@@ -591,15 +592,19 @@ int get_LeftNum(char* input, int* optrIndex, char* storeDigits, int* endOfLeft)
 
 	//Goes from the endOfLeft index until it hits an operator (optrIndex) and stores each digit
 	printf("Left #, storeDigits: ");
-	for (int goRight = *endOfLeft + 1; isdigit(input[goRight]); goRight++)
+	//for (int goRight = *endOfLeft + 1; isdigit(input[goRight]); goRight++)
+	for (int goRight = *endOfLeft; isdigit(input[goRight]); goRight++)
 	{
 		//NEW EDIT
-		if (goRight == 1)
+		//if (goRight == 1)
+		if (goRight == 0)
 		{
 			//printf("\ngoRight: %d\n", goRight);
-			storeDigits[someIndex] = input[goRight - 1];
+			//storeDigits[someIndex] = input[goRight - 1];
+			storeDigits[someIndex] = input[goRight];
 			printf("%c", storeDigits[someIndex]);
 			someIndex++;
+			continue;
 			//printf("\n For input[goRight], input[%d]: %c\n", goRight, input[goRight]);
 			/*if (isdigit(input[goRight]))
 			{
@@ -716,18 +721,22 @@ void create_newLeftSide(int* optrIndex, char* output, char* input, char* charsOf
 	//finalResult to be placed right after the left part or to replace what was operated on
 	printf("endOfLeft: %d\n", *endOfLeft);
 	printf("Placing finalResult into output[%d]\n", *endOfLeft + 1);
-	for (int i = *endOfLeft + 1; *endOfInt_copy >= 0; i++)
+	//for (int i = *endOfLeft + 1; *endOfInt_copy >= 0; i++)
+	for (int i = *endOfLeft; *endOfInt_copy >= 0; i++)
 	{
 		//NEW EDIT
-		if (i == 1)
+		//if (i == 1)
+		if (i == 0)
 		{
 			printf("\nEntered endOfLeft == 0\n");
-			output[i - 1] = charsOfInt[*endOfInt_copy];
-			printf("output[%d]: %c, charsOfInt[%d]: %c | ", i - 1, output[i - 1], *endOfInt_copy, charsOfInt[*endOfInt_copy]);
+			//output[i - 1] = charsOfInt[*endOfInt_copy];
+			output[i] = charsOfInt[*endOfInt_copy];
+			//printf("output[%d]: %c, charsOfInt[%d]: %c | ", i - 1, output[i - 1], *endOfInt_copy, charsOfInt[*endOfInt_copy]);
+			printf("output[%d]: %c, charsOfInt[%d]: %c | ", i, output[i], *endOfInt_copy, charsOfInt[*endOfInt_copy]);
 			printf("\ninput: %p and output: %p\n", input, output);
 			(*endOfInt_copy)--;
 			printf("\nendOfInt_copy = %d\n", *endOfInt_copy);
-			
+			continue;
 			
 		}
 
@@ -761,8 +770,10 @@ void create_newRightSide(int* someIndex, int* endOfLeft, int* endOfInt, char* in
 	
 	//someIndex = endOfRight
 	//i is the index right after the placement of finalResult
-	for (int i = *endOfLeft + 1 + *endOfInt + 1; input[*someIndex] != '\0'; i++) 
+	//for (int i = *endOfLeft + 1 + *endOfInt + 1; input[*someIndex] != '\0'; i++)
+	for (int i = *endOfLeft + *endOfInt + 1; input[*someIndex] != '\0'; i++) 
 	{
+		//This seems to be working as intended.
 		//Don't need to create a newRightSide for the case of 12+0, the last remaining operator
 		if (*endOfLeft == 0 && (input[endOfRight + 1] == '\0'))
 		{
