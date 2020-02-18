@@ -1,5 +1,9 @@
 // calculator.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+// To do in the future:
+// - Pre format the inputted string
+// - account for P (parenthesis)
+
 #define _CRT_SECURE_NO_WARNINGS
 #define __STDC_WANT_LIB_EXT1__ 1
 #include <stdio.h>
@@ -8,23 +12,22 @@
 #include <ctype.h>
 
 void evaluate_E(char* input, char* output);
-void evaluate_M(char* input, char* output);
-void evaluate_D(char* input, char* output);
-void evaluate_A(char* input, char* output);
-void evaluate_S(char* input, char* output);
+void evaluate_MD(char* input, char* output);
+void evaluate_AS(char* input, char* output);
 
 int intToChar(int num, char* arr);
 int get_LeftNum(char* input, int* optrIndex, char* storeDigits, int* endOfLeft);
 int get_RightNum(char* input, int* optrIndex, char* storeDigits, int* endOfRight);
 void create_newLeftSide(int* optrIndex, char* output, char* input, char* charsOfInt, int* endOfLeft, int* endOfInt_copy);
 void create_newRightSide(int* someIndex, int* endOfLeft, int* endOfInt, char* input, char* output);
+void putBackNewStr(char* input, char* output);
 
 int main()
 {
 	char str[100] = {};
 	char str1[100] = {};
-	int leftIndex = 0;
-	int rightIndex = 0;
+	//int leftIndex = 0;
+	//int rightIndex = 0;
 
 	
 
@@ -33,45 +36,31 @@ int main()
 	printf("Address of str: %p\n", str);
 	printf("%s is the entire string\n", str);
 
+
 	evaluate_E(str, str1);
-	printf("\nAfter evaluate_E str1: ");
-	for (int i = 0; str1[i] != '\0'; i++)
-	{
-		printf("%c", str1[i]);
-	}
-	printf("\n");
-
-	evaluate_M(str1, str);
-	printf("\nAfter evaluate_M str: ");
+	printf("\nAfter evaluate_E str: ");
 	for (int i = 0; str[i] != '\0'; i++)
 	{
 		printf("%c", str[i]);
 	}
 	printf("\n");
 
-	evaluate_D(str, str1);
-	printf("\nAfter evaluate_D str1: ");
-	for (int i = 0; str1[i] != '\0'; i++)
-	{
-		printf("%c", str1[i]);
-	}
-	printf("\n");
-
-	evaluate_A(str1, str);
-	printf("\nAfter evaluate_A str: ");
+	evaluate_MD(str, str1);
+	printf("\nAfter evaluate_MD str: ");
 	for (int i = 0; str[i] != '\0'; i++)
 	{
 		printf("%c", str[i]);
 	}
 	printf("\n");
 
-	evaluate_S(str, str1);
-	printf("\nAfter evaluate_S str1: ");
-	for (int i = 0; str1[i] != '\0'; i++)
+	evaluate_AS(str, str1);
+	printf("\nAfter evaluate_AS str: ");
+	for (int i = 0; str[i] != '\0'; i++)
 	{
-		printf("%c", str1[i]);
+		printf("%c", str[i]);
 	}
 	printf("\n");
+
 
 	return 0;
 }
@@ -93,6 +82,7 @@ void evaluate_E(char* input, char* output)
 	char charsOfInt[10];
 	int endOfInt, endOfInt_copy;
 
+	//bool optrExists = false;
 	//Loop through the input. If it doesn't encounter a non digit, then it just loops through and does nothing.
 	for (int i = 0; input[i] != '\0'; i++)
 	{
@@ -103,6 +93,8 @@ void evaluate_E(char* input, char* output)
 		*/
 		if (input[i] == '^') //---CHANGE FOR EACH MATH OPERATION
 		{
+			//optrExists = true;
+			
 			optrIndex = i;//store index of operator
 			printf("ADDRESS OF input: %p\n", input);
 			printf("optrIndex: %d, ", optrIndex);
@@ -148,12 +140,16 @@ void evaluate_E(char* input, char* output)
 			//printf("\nMark the end of output -> newStrEnd + 1: %d", newStrEnd + 1);
 			someIndex = 0; //reset after use
 			printf("\n");
+			
+			//Put new string back into original array
+			putBackNewStr(input, output);
 
-			//4. Point to this new string to be looped on
+			//4. No need to point to newly created string
 			//Once the output is made, set inputPtr to output to loop through output
-			printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
-			input = output;
-			printf("input set to output\nADDRESS OF input: %p\n", input);
+			//printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
+			//input = output;
+			//printf("input set to output\nADDRESS OF input: %p\n", input);
+
 			optrIndex = 0; //reset
 			newStrEnd = 0; //reset
 			i = -1; //reset the for loop index counter to 0 to process the string from the beginning
@@ -170,10 +166,15 @@ void evaluate_E(char* input, char* output)
 
 	}//End of for loop
 
+	// if(optrExists)
+	// 	return true;
+	// else
+	// 	return false;
+
 
 }
 
-void evaluate_M(char* input, char* output)
+void evaluate_MD(char* input, char* output)
 {
 	int optrIndex = 0;
 	int endOfLeft = 0;
@@ -198,7 +199,7 @@ void evaluate_M(char* input, char* output)
 		/*
 		Decision making - You have to check the whole string before moving onto the next math operator
 		*/
-		if (input[i] == '*') //---CHANGE FOR EACH MATH OPERATION
+		if ((input[i] == '*') || (input[i] == '/')) //---CHANGE FOR EACH MATH OPERATION
 		{
 			optrIndex = i;//store index of operator
 			printf("ADDRESS OF input: %p\n", input);
@@ -210,8 +211,17 @@ void evaluate_M(char* input, char* output)
 			rightNum = get_RightNum(input, &optrIndex, storeDigits, &endOfRight);
 			//END OF GETTING RIGHT NUM
 
-			finalResult = leftNum * rightNum; //---CHANGE FOR EACH MATH OPERATION
-			printf("finalResult from * is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
+			if(input[i] == '*')
+			{
+				finalResult = leftNum * rightNum; //---CHANGE FOR EACH MATH OPERATION
+				printf("finalResult from * is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
+			}
+			else if(input[i] == '/')
+			{
+				finalResult = leftNum / rightNum; //---CHANGE FOR EACH MATH OPERATION
+				printf("finalResult from / is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
+			}
+				
 
 			//Convert finalResult from int to char
 			endOfInt = intToChar(finalResult, charsOfInt); //endOfInt is the last index of the int
@@ -246,16 +256,20 @@ void evaluate_M(char* input, char* output)
 			someIndex = 0; //reset after use
 			printf("\n");
 
-			//4. Point to this new string to be looped on
+			//Put new string back into original array
+			putBackNewStr(input, output);
+
+			//4. No need to point to newly created string
 			//Once the output is made, set inputPtr to output to loop through output
-			printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
-			input = output;
-			printf("input set to output\nADDRESS OF input: %p\n", input);
+			//printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
+			//input = output;
+			//printf("input set to output\nADDRESS OF input: %p\n", input);
+
 			optrIndex = 0; //reset
 			newStrEnd = 0; //reset
 			i = -1; //reset the for loop index counter to 0 to process the string from the beginning
 			printf("optrIndex: %d\n", optrIndex);
-			printf("Final output:");
+			printf("Final output, printing out input:");
 
 			for (int i = 0; input[i] != '\0'; i++)
 			{
@@ -270,7 +284,7 @@ void evaluate_M(char* input, char* output)
 
 }
 
-void evaluate_D(char* input, char* output)
+void evaluate_AS(char* input, char* output)
 {
 	int optrIndex = 0;
 	int endOfLeft = 0;
@@ -295,7 +309,7 @@ void evaluate_D(char* input, char* output)
 		/*
 		Decision making - You have to check the whole string before moving onto the next math operator
 		*/
-		if (input[i] == '/') //---CHANGE FOR EACH MATH OPERATION
+		if ((input[i] == '+') || (input[i] == '-')) //---CHANGE FOR EACH MATH OPERATION
 		{
 			optrIndex = i;//store index of operator
 			printf("ADDRESS OF input: %p\n", input);
@@ -307,8 +321,16 @@ void evaluate_D(char* input, char* output)
 			rightNum = get_RightNum(input, &optrIndex, storeDigits, &endOfRight);
 			//END OF GETTING RIGHT NUM
 
-			finalResult = leftNum / rightNum; //---CHANGE FOR EACH MATH OPERATION
-			printf("finalResult from / is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
+			if(input[i] == '+')
+			{
+				finalResult = leftNum + rightNum; //---CHANGE FOR EACH MATH OPERATION
+				printf("finalResult from + is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
+			}
+			else if(input[i] == '-')
+			{
+				finalResult = leftNum - rightNum; //---CHANGE FOR EACH MATH OPERATION
+				printf("finalResult from - is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
+			}
 
 			//Convert finalResult from int to char
 			endOfInt = intToChar(finalResult, charsOfInt); //endOfInt is the last index of the int
@@ -343,11 +365,15 @@ void evaluate_D(char* input, char* output)
 			someIndex = 0; //reset after use
 			printf("\n");
 
-			//4. Point to this new string to be looped on
+			//Put new string back into original array
+			putBackNewStr(input, output);
+
+			//4. No need to point to newly created string
 			//Once the output is made, set inputPtr to output to loop through output
-			printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
-			input = output;
-			printf("input set to output\nADDRESS OF input: %p\n", input);
+			//printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
+			//input = output;
+			//printf("input set to output\nADDRESS OF input: %p\n", input);
+			
 			optrIndex = 0; //reset
 			newStrEnd = 0; //reset
 			i = -1; //reset the for loop index counter to 0 to process the string from the beginning
@@ -366,202 +392,6 @@ void evaluate_D(char* input, char* output)
 
 
 }
-
-void evaluate_A(char* input, char* output)
-{
-	int optrIndex = 0;
-	int endOfLeft = 0;
-	int endOfRight = 0;
-
-	char storeDigits[11] = {}; //store the digits for each math operation
-	int someIndex = 0; //Not needed? needs to be reset to 0 after each use
-	int newStrEnd = 0; //reset after each use?
-
-	int leftNum, rightNum = 0;
-	int finalResult = 0; //to store the result after performing math operator, need to reset after each use
-	//char output[100] = {}; //the new string each time a math operator is performed
-
-	char charsOfInt[10];
-	int endOfInt, endOfInt_copy;
-
-	//Loop through the input. If it doesn't encounter a non digit, then it just loops through and does nothing.
-	for (int i = 0; input[i] != '\0'; i++)
-	{
-		printf("INDEX IS %d, CURRRENTLY AT: %c\n", i, input[i]);
-
-		/*
-		Decision making - You have to check the whole string before moving onto the next math operator
-		*/
-		if (input[i] == '+') //---CHANGE FOR EACH MATH OPERATION
-		{
-			optrIndex = i;//store index of operator
-			printf("ADDRESS OF input: %p\n", input);
-			printf("optrIndex: %d, ", optrIndex);
-
-			leftNum = get_LeftNum(input, &optrIndex, storeDigits, &endOfLeft);
-			//END OF GETTING LEFT NUMBER, BEGIN GETTING RIGHT NUMBER
-
-			rightNum = get_RightNum(input, &optrIndex, storeDigits, &endOfRight);
-			//END OF GETTING RIGHT NUM
-
-			finalResult = leftNum + rightNum; //---CHANGE FOR EACH MATH OPERATION
-			printf("finalResult from + is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
-
-			//Convert finalResult from int to char
-			endOfInt = intToChar(finalResult, charsOfInt); //endOfInt is the last index of the int
-			endOfInt_copy = endOfInt;
-			printf("endOfInt:%d\nConverted int to char: ", endOfInt);
-			for (int i = endOfInt; i >= 0; i--)
-			{
-				//printf("i is: %d, %c\n", i, charsOfInt[i]);
-				printf("%c", charsOfInt[i]);
-			}
-			printf("\nEND OF intToChar\n");
-			//END OF MATH OPERATOR, BEGIN NEW STRING
-
-			printf("After finalResult, endOfLeft is: %d, %c\n", endOfLeft, input[endOfLeft]);
-			printf("\nSTARTING create_newLeftSide\n");
-			printf("From beginning to optrIndex %d, output:", optrIndex);
-
-			create_newLeftSide(&optrIndex, output, input, charsOfInt, &endOfLeft, &endOfInt_copy);
-
-			//END OF CREATING LEFT SIDE OF NEW STRING
-			printf("\n endOfInt: %d\n", endOfInt);
-			printf("output 2ndPart: ");
-			someIndex = endOfRight;
-			printf("someIndex = endOfRight -> [%d], input[%d] = %c ", endOfRight, endOfRight, input[endOfRight]);
-			printf("\nSTARTING create_newRightSide\n");
-
-			create_newRightSide(&someIndex, &endOfLeft, &endOfInt, input, output);
-
-			//END OF CREATING RIGHT SIDE OF NEW STRING
-
-			//printf("\nMark the end of output -> newStrEnd + 1: %d", newStrEnd + 1);
-			someIndex = 0; //reset after use
-			printf("\n");
-
-			//4. Point to this new string to be looped on
-			//Once the output is made, set inputPtr to output to loop through output
-			printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
-			input = output;
-			printf("input set to output\nADDRESS OF input: %p\n", input);
-			optrIndex = 0; //reset
-			newStrEnd = 0; //reset
-			i = -1; //reset the for loop index counter to 0 to process the string from the beginning
-			printf("optrIndex: %d\n", optrIndex);
-			printf("Final output:");
-
-			for (int i = 0; input[i] != '\0'; i++)
-			{
-				printf("%c", input[i]);
-			}
-			printf("\n");
-			printf("END OF PROCESSING AN OPERATOR\n\n\n");
-		}//End of if(isdigit...)
-
-	}//End of for loop
-
-
-}
-
-void evaluate_S(char* input, char* output)
-{
-	int optrIndex = 0;
-	int endOfLeft = 0;
-	int endOfRight = 0;
-
-	char storeDigits[11] = {}; //store the digits for each math operation
-	int someIndex = 0; //Not needed? needs to be reset to 0 after each use
-	int newStrEnd = 0; //reset after each use?
-
-	int leftNum, rightNum = 0;
-	int finalResult = 0; //to store the result after performing math operator, need to reset after each use
-	//char output[100] = {}; //the new string each time a math operator is performed
-
-	char charsOfInt[10];
-	int endOfInt, endOfInt_copy;
-
-	//Loop through the input. If it doesn't encounter a non digit, then it just loops through and does nothing.
-	for (int i = 0; input[i] != '\0'; i++)
-	{
-		printf("INDEX IS %d, CURRRENTLY AT: %c\n", i, input[i]);
-
-		/*
-		Decision making - You have to check the whole string before moving onto the next math operator
-		*/
-		if (input[i] == '-') //---CHANGE FOR EACH MATH OPERATION
-		{
-			optrIndex = i;//store index of operator
-			printf("ADDRESS OF input: %p\n", input);
-			printf("optrIndex: %d, ", optrIndex);
-
-			leftNum = get_LeftNum(input, &optrIndex, storeDigits, &endOfLeft);
-			//END OF GETTING LEFT NUMBER, BEGIN GETTING RIGHT NUMBER
-
-			rightNum = get_RightNum(input, &optrIndex, storeDigits, &endOfRight);
-			//END OF GETTING RIGHT NUM
-
-			finalResult = leftNum - rightNum; //---CHANGE FOR EACH MATH OPERATION
-			printf("finalResult from - is: %d\n", finalResult); //---CHANGE FOR EACH MATH OPERATION
-
-			//Convert finalResult from int to char
-			endOfInt = intToChar(finalResult, charsOfInt); //endOfInt is the last index of the int
-			endOfInt_copy = endOfInt;
-			printf("endOfInt:%d\nConverted int to char: ", endOfInt);
-			for (int i = endOfInt; i >= 0; i--)
-			{
-				//printf("i is: %d, %c\n", i, charsOfInt[i]);
-				printf("%c", charsOfInt[i]);
-			}
-			printf("\nEND OF intToChar\n");
-			//END OF MATH OPERATOR, BEGIN NEW STRING
-
-			printf("After finalResult, endOfLeft is: %d, %c\n", endOfLeft, input[endOfLeft]);
-			printf("\nSTARTING create_newLeftSide\n");
-			printf("From beginning to optrIndex %d, output:", optrIndex);
-
-			create_newLeftSide(&optrIndex, output, input, charsOfInt, &endOfLeft, &endOfInt_copy);
-
-			//END OF CREATING LEFT SIDE OF NEW STRING
-			printf("\n endOfInt: %d\n", endOfInt);
-			printf("output 2ndPart: ");
-			someIndex = endOfRight;
-			printf("someIndex = endOfRight -> [%d], input[%d] = %c ", endOfRight, endOfRight, input[endOfRight]);
-			printf("\nSTARTING create_newRightSide\n");
-
-			create_newRightSide(&someIndex, &endOfLeft, &endOfInt, input, output);
-
-			//END OF CREATING RIGHT SIDE OF NEW STRING
-
-			//printf("\nMark the end of output -> newStrEnd + 1: %d", newStrEnd + 1);
-			someIndex = 0; //reset after use
-			printf("\n");
-
-			//4. Point to this new string to be looped on
-			//Once the output is made, set inputPtr to output to loop through output
-			printf("\nBefore setting input = output, input: %p and output: %p\n", input, output);
-			input = output;
-			printf("input set to output\nADDRESS OF input: %p\n", input);
-			optrIndex = 0; //reset
-			newStrEnd = 0; //reset
-			i = -1; //reset the for loop index counter to 0 to process the string from the beginning
-			printf("optrIndex: %d\n", optrIndex);
-			printf("Final output:");
-
-			for (int i = 0; input[i] != '\0'; i++)
-			{
-				printf("%c", input[i]);
-			}
-			printf("\n");
-			printf("END OF PROCESSING AN OPERATOR\n\n\n");
-		}//End of if(isdigit...)
-
-	}//End of for loop
-
-
-}
-
-
 
 int get_LeftNum(char* input, int* optrIndex, char* storeDigits, int* endOfLeft)
 {
@@ -799,6 +629,24 @@ void create_newRightSide(int* someIndex, int* endOfLeft, int* endOfInt, char* in
 	}
 	printf("\nAssigning null char to output[%d] (newStrEnd)", newStrEnd);
 	output[newStrEnd] = '\0';//Mark the end of the output
+}
+
+void putBackNewStr(char* input, char* output)
+{
+	int nullCharIndex;
+	
+	printf("\nPrinting out putBackNewStr, input[]: ");
+	for(int i = 0; output[i] != '\0'; i++)
+	{
+		input[i] = output[i];
+		printf("%c", input[i]);
+		if(output[i+1] == '\0')
+		{
+			nullCharIndex = i+1;
+		}
+	}
+	input[nullCharIndex] = '\0';
+	printf("/n");
 }
 
 
